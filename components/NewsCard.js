@@ -1,18 +1,58 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Card, Title, Paragraph, useTheme } from 'react-native-paper';
+import React, { useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Card, Title, Paragraph, IconButton, useTheme } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 
-const NewsCard = ({ image, title, description }) => {
+const NewsCard = ({ image, title, description, content }) => {
   const { colors } = useTheme();
+  const navigation = useNavigation();
+  const [liked, setLiked] = useState(false);
+  const [disliked, setDisliked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+
+  const handlePress = () => {
+    navigation.navigate('NewsDetail', { title, image, content });
+  };
 
   return (
-    <Card style={[styles.card, { backgroundColor: colors.surface }]}>
-      <Card.Cover source={image} style={styles.cardImage} />
-      <Card.Content>
-        <Title style={styles.cardTitle}>{title}</Title>
-        <Paragraph style={styles.cardDescription}>{description}</Paragraph>
-      </Card.Content>
-    </Card>
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
+      <Card style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Card.Cover source={image} style={styles.cardImage} />
+        <Card.Content>
+          <Title style={styles.cardTitle}>{title}</Title>
+          <Paragraph style={styles.cardDescription} numberOfLines={3}>
+            {description}
+          </Paragraph>
+
+          <View style={styles.actions}>
+            <IconButton
+              icon={liked ? 'thumb-up' : 'thumb-up-outline'}
+              iconColor={liked ? '#4CAF50' : '#777'}
+              size={22}
+              onPress={() => {
+                setLiked(!liked);
+                if (disliked) setDisliked(false);
+              }}
+            />
+            <IconButton
+              icon={disliked ? 'thumb-down' : 'thumb-down-outline'}
+              iconColor={disliked ? '#E53935' : '#777'}
+              size={22}
+              onPress={() => {
+                setDisliked(!disliked);
+                if (liked) setLiked(false);
+              }}
+            />
+            <IconButton
+              icon={bookmarked ? 'bookmark' : 'bookmark-outline'}
+              iconColor={bookmarked ? '#FFD54F' : '#777'}
+              size={22}
+              onPress={() => setBookmarked(!bookmarked)}
+            />
+          </View>
+        </Card.Content>
+      </Card>
+    </TouchableOpacity>
   );
 };
 
@@ -38,6 +78,11 @@ const styles = StyleSheet.create({
   },
   cardDescription: {
     color: '#666',
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 6,
   },
 });
 

@@ -1,56 +1,71 @@
-import React from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
-import { Appbar } from 'react-native-paper';
+import React, { useEffect, useState } from 'react';
+import { View, FlatList, StyleSheet, ActivityIndicator, Text, Image } from 'react-native';
+import { Appbar, Card } from 'react-native-paper';
+import axios from 'axios';
 import NewsCard from '../components/NewsCard';
 
-const newsData = [
-  {
-    id: '1',
-    title: 'New Technology Breakthrough',
-    description: 'Scientists announce a major breakthrough in renewable energy.',
-    image: require('../assets/news_image1.jpeg'),
-  },
-  {
-    id: '2',
-    title: 'Global Economy Update',
-    description: 'Market trends show signs of recovery and new growth opportunities.',
-    image: require('../assets/news_image2.webp'),
-  },
-  {
-    id: '3',
-    title: 'Health and Wellness Tips',
-    description: 'Experts share essential tips for a healthy lifestyle and mental well-being.',
-    image: require('../assets/news_image3.webp'),
-  },
-  {
-    id: '4',
-    title: 'Space Exploration Progress',
-    description: 'New mission launched to explore a distant galaxy.',
-    image: require('../assets/news_image4.webp'),
-  },
-  {
-    id: '5',
-    title: 'Local Community Event',
-    description: 'Annual town fair brings together thousands of residents for fun and games.',
-    image: require('../assets/news_image5.jpg'),
-  },
-  // TODO: Add more data or integrate with a news API (e.g., NewsAPI) here
-];
+const API_KEY = 'pub_6932c535f5f5476694ff9a2cda21967b'; // <-- Replace with your NewsData.io API key
+const API_URL = `https://newsdata.io/api/1/news?apikey=${API_KEY}&language=en&country=in&category=technology`;
 
 const HomeScreen = () => {
+  const [news, setNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await axios.get(API_URL);
+        if (response.data && response.data.results) {
+          setNews(response.data.results);
+        } else {
+          setError('No news data available.');
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Failed to fetch news.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#6200ee" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Appbar.Header>
-        <Appbar.Content title="News Feed" />
+        <Appbar.Content title="Live News Feed" />
       </Appbar.Header>
+
       <FlatList
-        data={newsData}
-        keyExtractor={(item) => item.id}
+        data={news}
+        keyExtractor={(item, index) => item.link || index.toString()}
         renderItem={({ item }) => (
           <NewsCard
-            image={item.image}
+            image={
+              item.image_url
+                ? { uri: item.image_url }
+                : require('../assets/news_image5.jpg')
+            }
             title={item.title}
-            description={item.description}
+            description={item.description || 'No description available.'}
           />
         )}
         contentContainerStyle={styles.listContainer}
@@ -66,6 +81,20 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingVertical: 8,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: 'red',
   },
 });
 
