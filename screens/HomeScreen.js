@@ -1,48 +1,55 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator, Text, Image } from 'react-native';
-import { Appbar, Card } from 'react-native-paper';
+import { View, FlatList, StyleSheet, ActivityIndicator, Text, ScrollView } from 'react-native';
+import { Appbar, Button } from 'react-native-paper';
 import axios from 'axios';
 import NewsCard from '../components/NewsCard';
 
-const API_KEY = 'pub_6932c535f5f5476694ff9a2cda21967b'; // <-- Replace with your NewsData.io API key
-const API_URL = `https://newsdata.io/api/1/news?apikey=${API_KEY}&language=en&country=in&category=technology`;
+const API_KEY = 'pub_6932c535f5f5476694ff9a2cda21967b';
+
+const CATEGORIES = ['technology', 'sports', 'business', 'health', 'science', 'entertainment', 'world'];
 
 const HomeScreen = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('technology');
+
+  const fetchNews = async (category) => {
+    setLoading(true);
+    setError('');
+    const API_URL = `https://newsdata.io/api/1/latest?apikey=${API_KEY}&language=en&country=in&category=${category}`;
+
+    try {
+      const response = await axios.get(API_URL);
+      console.log(`📰 Fetching category: ${category}`);
+      console.log('📰 News API Raw Response:', JSON.stringify(response.data.results, null, 2));
+
+      if (response.data && response.data.results) {
+        const uniqueNews = response.data.results.filter(
+          (item, index, self) =>
+            index === self.findIndex((t) => t.link === item.link)
+        );
+
+        console.log('🆔 Article Identifiers:');
+        uniqueNews.forEach((article, index) => {
+          console.log(`${index + 1}. ${article.article_id}`);
+        });
+
+        setNews(uniqueNews);
+      } else {
+        setError('No news data available.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to fetch news.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchNews = async () => {
-       try {
-        const response = await axios.get(API_URL);
-
-        console.log('📰 News API Raw Response:', JSON.stringify(response.data.results, null, 2));
-        
-
-        if (response.data && response.data.results) {
-          const uniqueNews = response.data.results.filter(
-            (item, index, self) =>
-              index === self.findIndex((t) => t.link === item.link)
-      )       ;
-            console.log('🆔 Article Identifiers:');
-            response.data.results.forEach((article, index) => {
-             console.log(`${index + 1}. ${article.article_id}`);
-  });
-          setNews(uniqueNews);
-} else {
-  setError('No news data available.');
-}
-      } catch (err) {
-        console.error(err);
-        setError('Failed to fetch news.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNews();
-  }, []);
+    fetchNews(selectedCategory);
+  }, [selectedCategory]);
 
   if (loading) {
     return (
@@ -66,6 +73,29 @@ const HomeScreen = () => {
         <Appbar.Content title="Live News Feed" />
       </Appbar.Header>
 
+      {/* ===== Filter Bar ===== */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterContainer}
+      >
+        {CATEGORIES.map((cat) => (
+          <Button
+            key={cat}
+            mode={selectedCategory === cat ? 'contained' : 'outlined'}
+            style={[
+              styles.filterButton,
+              selectedCategory === cat && styles.activeFilter,
+            ]}
+            labelStyle={{ color: selectedCategory === cat ? '#fff' : '#333' }}
+            onPress={() => setSelectedCategory(cat)}
+          >
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </Button>
+        ))}
+      </ScrollView>
+
+      {/* ===== News List ===== */}
       <FlatList
         data={news}
         keyExtractor={(item, index) => item.link || index.toString()}
@@ -88,26 +118,28 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  listContainer: {
-    paddingVertical: 8,
-  },
-  loaderContainer: {
-    flex: 1,
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  listContainer: {  paddingVertical: 8 },
+  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errorText: { fontSize: 16, color: 'red' },
+  filterContainer: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     justifyContent: 'center',
-    alignItems: 'center',
+    //marginVertical: 8  
+    },
+  filterButton: {
+    marginHorizontal: 4,
+    borderColor: '#ccc',
+    borderRadius: 20,
+     height: 40,             
+  justifyContent: 'center', 
+ // marginVertical: 8  
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
+  activeFilter: {
+    backgroundColor: '#391a65ff',
   },
 });
 
