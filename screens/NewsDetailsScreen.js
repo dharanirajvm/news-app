@@ -1,9 +1,17 @@
 import React from 'react';
-import { View, ScrollView, Image, StyleSheet } from 'react-native';
-import { Text, Appbar } from 'react-native-paper';
+import { View, ScrollView, Image, StyleSheet, Linking } from 'react-native';
+import { Text, Appbar, Button } from 'react-native-paper';
 
 const NewsDetailScreen = ({ route, navigation }) => {
-  const { title, image, content } = route.params;
+  const { title, image, description, link } = route.params;
+
+  const openFullArticle = () => {
+    if (link) {
+      Linking.openURL(link);
+    } else {
+      alert('Full article link not available.');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -15,7 +23,18 @@ const NewsDetailScreen = ({ route, navigation }) => {
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Image source={image} style={styles.image} />
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.content}>{content || 'No detailed content available.'}</Text>
+        <Text style={styles.content}>
+          {description || 'No detailed content available.'}
+        </Text>
+
+        <Button
+          mode="contained"
+          onPress={openFullArticle}
+          style={styles.button}
+          icon="open-in-new"
+        >
+          Read Full Article
+        </Button>
       </ScrollView>
     </View>
   );
@@ -28,6 +47,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
+    paddingBottom: 40,
   },
   image: {
     width: '100%',
@@ -44,6 +64,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#444',
     lineHeight: 24,
+    marginBottom: 20,
+  },
+  button: {
+    marginTop: 16,
+    borderRadius: 8,
   },
 });
 

@@ -18,7 +18,7 @@ export default function App() {
           <Stack.Screen name="MainTabs" component={TabNavigator} />
 
           {/* Full news detail screen */}
-          <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
+          <Stack.Screen name="NewsDetail" component={NewsDetailScreen}  />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

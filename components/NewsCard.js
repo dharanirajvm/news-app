@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Title, Paragraph, IconButton, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 
-const NewsCard = ({ image, title, description, content }) => {
+const NewsCard = ({ image, title, description, link }) => {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const [liked, setLiked] = useState(false);
@@ -11,7 +11,7 @@ const NewsCard = ({ image, title, description, content }) => {
   const [bookmarked, setBookmarked] = useState(false);
 
   const handlePress = () => {
-    navigation.navigate('NewsDetail', { title, image, content });
+    navigation.navigate('NewsDetail', { title, image, description,link });
   };
 
   return (

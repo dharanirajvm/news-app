@@ -5,6 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import TrendingScreen from '../screens/TrendingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import NewsDetailScreen from '../screens/NewsDetailsScreen';
+
 
 const Tab = createBottomTabNavigator();
 

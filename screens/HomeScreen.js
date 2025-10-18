@@ -14,13 +14,25 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const fetchNews = async () => {
-      try {
+       try {
         const response = await axios.get(API_URL);
+
+        console.log('📰 News API Raw Response:', JSON.stringify(response.data.results, null, 2));
+        
+
         if (response.data && response.data.results) {
-          setNews(response.data.results);
-        } else {
-          setError('No news data available.');
-        }
+          const uniqueNews = response.data.results.filter(
+            (item, index, self) =>
+              index === self.findIndex((t) => t.link === item.link)
+      )       ;
+            console.log('🆔 Article Identifiers:');
+            response.data.results.forEach((article, index) => {
+             console.log(`${index + 1}. ${article.article_id}`);
+  });
+          setNews(uniqueNews);
+} else {
+  setError('No news data available.');
+}
       } catch (err) {
         console.error(err);
         setError('Failed to fetch news.');
@@ -66,6 +78,7 @@ const HomeScreen = () => {
             }
             title={item.title}
             description={item.description || 'No description available.'}
+            link={item.link}
           />
         )}
         contentContainerStyle={styles.listContainer}
