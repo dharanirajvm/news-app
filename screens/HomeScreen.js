@@ -1,11 +1,13 @@
+import { API_KEY } from '@env';
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, ActivityIndicator, Text, ScrollView } from 'react-native';
 import { Appbar, Button } from 'react-native-paper';
 import axios from 'axios';
 import NewsCard from '../components/NewsCard';
 
-const API_KEY = 'pub_6932c535f5f5476694ff9a2cda21967b';
 
+// const API_KEY = 'pub_6932c535f5f5476694ff9a2cda21967b';
+console.log(API_KEY);
 const CATEGORIES = ['technology', 'sports', 'business', 'health', 'science', 'entertainment', 'world'];
 
 const HomeScreen = () => {
