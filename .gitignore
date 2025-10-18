@@ -3,7 +3,7 @@ node_modules/
 npm-debug.log*
 .vscode/
 .DS_Store
-news-backend/app/firebaseConfig.jsonnode_modules/
+news-backend/app/firebaseConfig.json
 .expo/
 dist/
 build/
