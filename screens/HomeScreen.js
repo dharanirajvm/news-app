@@ -1,3 +1,4 @@
+import { API_KEY } from '@env';
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, ActivityIndicator, Text, ScrollView } from 'react-native';
 import { Appbar, Button } from 'react-native-paper';
