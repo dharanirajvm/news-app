@@ -3,8 +3,9 @@ import { View, FlatList, StyleSheet, ActivityIndicator, Text, ScrollView } from 
 import { Appbar, Button } from 'react-native-paper';
 import axios from 'axios';
 import NewsCard from '../components/NewsCard';
+import Config from 'react-native-config';
 
-const API_KEY = 'pub_6932c535f5f5476694ff9a2cda21967b';
+const API_KEY = Config.API_KEY;
 
 const CATEGORIES = ['technology', 'sports', 'business', 'health', 'science', 'entertainment', 'world'];
 

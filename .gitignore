@@ -1,0 +1,6 @@
+node_modules/
+.env
+npm-debug.log*
+.vscode/
+.DS_Store
+news-backend/app/firebaseConfig.json
