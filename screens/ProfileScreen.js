@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { 
   Bookmark, 
   Heart, 
@@ -9,6 +9,10 @@ import {
   Share2,
   MoreVertical
 } from 'lucide-react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 
 const ProfileScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('saved');
@@ -113,6 +117,26 @@ const ProfileScreen = ({ navigation }) => {
     </View>
   );
 
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut(auth);
+            // optional explicit navigation; App.js onAuthStateChanged will also switch screens
+            //navigation.navigate('Login');
+          } catch (err) {
+            console.warn('Logout failed', err);
+            Alert.alert('Error', err.message || 'Failed to logout.');
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.screen}>
       {/* Header */}
@@ -186,6 +210,14 @@ const ProfileScreen = ({ navigation }) => {
           likedArticles.map(renderArticleCard)
         )}
       </ScrollView>
+
+      {/* Logout row */}
+      <TouchableOpacity style={styles.logoutRow} onPress={handleLogout}>
+        <View style={styles.rowLeft}>
+          <MaterialCommunityIcons name="logout" size={22} color="#e53935" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -226,6 +258,24 @@ const styles = StyleSheet.create({
   cardExcerpt: { color: '#4b5563', fontSize: 14, marginBottom: 10 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   iconRow: { flexDirection: 'row', alignItems: 'center' },
+  logoutRow: {
+    padding: 14,
+    marginHorizontal: 16,
+    marginTop: 12,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 1,
+  },
+  logoutText: {
+    marginLeft: 12,
+    color: '#e53935',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  rowLeft: { flexDirection: 'row', alignItems: 'center' },
 });
 
 export default ProfileScreen;

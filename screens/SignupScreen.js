@@ -7,7 +7,8 @@ import {
   StyleSheet,
   Image,
 } from "react-native";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from "../firebaseConfig";
 
 export default function SignupScreen({ navigation }) {
@@ -19,8 +20,17 @@ export default function SignupScreen({ navigation }) {
 
   const handleSignup = async () => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      navigation.navigate("MainTabs", { screen: "Home" });
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // set displayName on the Firebase user
+      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+      if (fullName) {
+        await updateProfile(userCredential.user, { displayName: fullName });
+        // persist for Settings screen fallback
+        await AsyncStorage.setItem('@profile_name', fullName);
+      }
+      await AsyncStorage.setItem('@profile_email', email);
+      // navigate to Home tab inside MainTabs
+      navigation.navigate('MainTabs', { screen: 'Home' });
     } catch (err) {
       setError(err.message);
     }

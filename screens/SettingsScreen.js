@@ -22,6 +22,10 @@ import {
 import { LineChart } from 'react-native-gifted-charts';
 import { TextInput, Button, Portal } from 'react-native-paper';
 
+// new imports for Firebase auth
+import { auth } from '../firebaseConfig';
+import { signInWithEmailAndPassword, updatePassword as firebaseUpdatePassword } from 'firebase/auth';
+
 const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
@@ -40,15 +44,44 @@ const SettingsScreen = () => {
     { value: 45, label: 'Sun' },
   ];
 
-  const [profileName, setProfileName] = useState('Alex Morgan');
-  const [profileEmail, setProfileEmail] = useState('alex.morgan@example.com');
+  // load profile from storage / auth
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
   const [avatarUri, setAvatarUri] = useState(null);
-
 
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isPrivacyVisible, setIsPrivacyVisible] = useState(false);
   const [editField, setEditField] = useState(null); // 'name' | 'email'
   const [tempValue, setTempValue] = useState('');
+
+  // change password modal state
+  const [isChangeModalVisible, setIsChangeModalVisible] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordProcessing, setPasswordProcessing] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const savedName = await AsyncStorage.getItem('@profile_name');
+        const savedEmail = await AsyncStorage.getItem('@profile_email');
+        const savedAvatar = await AsyncStorage.getItem('@profile_avatar');
+
+        if (savedName) setProfileName(savedName);
+        else if (auth?.currentUser?.displayName) setProfileName(auth.currentUser.displayName);
+        else setProfileName(''); // fallback
+
+        if (savedEmail) setProfileEmail(savedEmail);
+        else if (auth?.currentUser?.email) setProfileEmail(auth.currentUser.email);
+        else setProfileEmail('');
+
+        if (savedAvatar) setAvatarUri(savedAvatar);
+      } catch (e) {
+        console.warn('Failed to load profile from storage', e);
+      }
+    })();
+  }, []);
 
   const openEdit = (field) => {
     setEditField(field);
@@ -63,22 +96,65 @@ const SettingsScreen = () => {
   };
 
   const saveEdit = () => {
-    if (editField === 'name') setProfileName(tempValue.trim() || profileName);
-    if (editField === 'email') setProfileEmail(tempValue.trim() || profileEmail);
+    if (editField === 'name') {
+      const newName = tempValue.trim() || profileName;
+      setProfileName(newName);
+      AsyncStorage.setItem('@profile_name', newName).catch(e => console.warn('save profile fail', e));
+    }
+    if (editField === 'email') {
+      const newEmail = tempValue.trim() || profileEmail;
+      setProfileEmail(newEmail);
+      AsyncStorage.setItem('@profile_email', newEmail).catch(e => console.warn('save profile fail', e));
+      // Note: updating Firebase Auth email requires reauth and updateEmail — not performed here.
+    }
     closeEdit();
-    // persist
-    (async () => {
-      try {
-        if (editField === 'name') await AsyncStorage.setItem('@profile_name', tempValue.trim() || profileName);
-        if (editField === 'email') await AsyncStorage.setItem('@profile_email', tempValue.trim() || profileEmail);
-      } catch (e) {
-        console.warn('Failed to save profile', e);
-      }
-    })();
   };
 
   const openPrivacy = () => setIsPrivacyVisible(true);
   const closePrivacy = () => setIsPrivacyVisible(false);
+
+  // password change helpers
+  const openChangePassword = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setIsChangeModalVisible(true);
+  };
+  const closeChangePassword = () => setIsChangeModalVisible(false);
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      Alert.alert('Error', 'Please enter current and new password.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Error', 'New password and confirmation do not match.');
+      return;
+    }
+
+    setPasswordProcessing(true);
+    try {
+      const emailToUse = profileEmail || auth?.currentUser?.email;
+      if (!emailToUse) throw new Error('No email available to reauthenticate.');
+
+      // reauthenticate using signInWithEmailAndPassword
+      await signInWithEmailAndPassword(auth, emailToUse, currentPassword);
+
+      // update password for current user
+      if (auth.currentUser) {
+        await firebaseUpdatePassword(auth.currentUser, newPassword);
+        Alert.alert('Success', 'Password updated.');
+        closeChangePassword();
+      } else {
+        throw new Error('User not signed in.');
+      }
+    } catch (err) {
+      console.warn('Password change failed', err);
+      Alert.alert('Error', err.message || 'Failed to change password.');
+    } finally {
+      setPasswordProcessing(false);
+    }
+  };
 
   const pickFromGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -155,7 +231,7 @@ const SettingsScreen = () => {
             <User size={20} color="#3498DB" />
             <View style={{ marginLeft: 12 }}>
               <Text style={styles.rowTitle}>Name</Text>
-              <Text style={styles.rowSubtitle}>{profileName}</Text>
+              <Text style={styles.rowSubtitle}>{profileName || '—'}</Text>
             </View>
           </View>
           <Edit3 size={20} color="#94a3b8" />
@@ -168,7 +244,7 @@ const SettingsScreen = () => {
             <Mail size={20} color="#3498DB" />
             <View style={{ marginLeft: 12 }}>
               <Text style={styles.rowTitle}>Email</Text>
-              <Text style={styles.rowSubtitle}>{profileEmail}</Text>
+              <Text style={styles.rowSubtitle}>{profileEmail || (auth?.currentUser?.email ?? '—')}</Text>
             </View>
           </View>
           <Edit3 size={20} color="#94a3b8" />
@@ -176,12 +252,12 @@ const SettingsScreen = () => {
 
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.row}>
+        <TouchableOpacity style={styles.row} onPress={openChangePassword}>
           <View style={styles.rowLeft}>
             <Lock size={20} color="#3498DB" />
             <View style={{ marginLeft: 12 }}>
               <Text style={styles.rowTitle}>Password</Text>
-              <Text style={styles.rowSubtitle}>Change your password</Text>
+              <Text style={styles.rowSubtitle}>Tap to change your password</Text>
             </View>
           </View>
           <ChevronRight size={20} color="#94a3b8" />
@@ -393,6 +469,7 @@ const SettingsScreen = () => {
           <Text style={styles.cardSubtitle}>Your preferred topics</Text>
 
           {[
+
             { category: 'Technology', percentage: 35 },
             { category: 'Business', percentage: 25 },
             { category: 'Health', percentage: 20 },
@@ -431,8 +508,8 @@ const SettingsScreen = () => {
             />
           </TouchableOpacity>
           <View style={{ marginLeft: 12 }}>
-            <Text style={styles.profileName}>Alex Morgan</Text>
-            <Text style={styles.rowSubtitle}>News Enthusiast</Text>
+            <Text style={styles.profileName}>{profileName || 'User'}</Text>
+            <Text style={styles.rowSubtitle}>{profileEmail || (auth?.currentUser?.email ?? '')}</Text>
           </View>
         </View>
       </View>
@@ -467,6 +544,20 @@ const SettingsScreen = () => {
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
             <Button onPress={closeEdit} mode="outlined" style={{ marginRight: 8 }}>Cancel</Button>
             <Button onPress={saveEdit} mode="contained">Save</Button>
+          </View>
+        </Modal>
+      </Portal>
+
+      {/* Change Password Modal */}
+      <Portal>
+        <Modal visible={isChangeModalVisible} onDismiss={closeChangePassword} contentContainerStyle={styles.modalContainer}>
+          <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 8 }}>Change Password</Text>
+          <TextInput mode="outlined" label="Current password" value={currentPassword} secureTextEntry onChangeText={setCurrentPassword} style={{ marginBottom: 12 }} />
+          <TextInput mode="outlined" label="New password" value={newPassword} secureTextEntry onChangeText={setNewPassword} style={{ marginBottom: 12 }} />
+          <TextInput mode="outlined" label="Confirm password" value={confirmPassword} secureTextEntry onChangeText={setConfirmPassword} style={{ marginBottom: 12 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <Button onPress={closeChangePassword} mode="outlined" style={{ marginRight: 8 }}>Cancel</Button>
+            <Button loading={passwordProcessing} onPress={handleChangePassword} mode="contained">Update</Button>
           </View>
         </Modal>
       </Portal>
