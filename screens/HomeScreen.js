@@ -5,7 +5,12 @@ import { Appbar, Button } from 'react-native-paper';
 import axios from 'axios';
 import NewsCard from '../components/NewsCard';
 import Config from 'react-native-config';
+import { auth } from "../firebaseConfig";
 
+const user = auth.currentUser;
+const uid = user ? user.uid : null;
+
+console.log('Current User UID:', uid);
 // const API_KEY = Config.API_KEY;
 
 const CATEGORIES = ['technology', 'sports', 'business', 'health', 'science', 'entertainment', 'world'];
@@ -24,7 +29,7 @@ const HomeScreen = () => {
     try {
       const response = await axios.get(API_URL);
       console.log(`📰 Fetching category: ${category}`);
-      console.log('📰 News API Raw Response:', JSON.stringify(response.data.results, null, 2));
+      // console.log('📰 News API Raw Response:', JSON.stringify(response.data.results, null, 2));
 
       if (response.data && response.data.results) {
         const uniqueNews = response.data.results.filter(
