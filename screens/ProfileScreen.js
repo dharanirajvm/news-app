@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { Text, Appbar, Portal, Modal, TextInput, Button, ToggleButton } from 'react-native-paper';
+import { Text, Appbar, Portal, Modal, TextInput, Button } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import ProfileCard from '../components/ProfileCard';
 const profilePic = require('../assets/profile_pic.jpg.jpg');
@@ -13,7 +13,6 @@ const ProfileScreen = () => {
     'Loves tracking technology and world news — reads 3 different sources daily to spot trends and bias.'
   );
 
-  const [tab, setTab] = React.useState('personal');
 
   const [isEditVisible, setIsEditVisible] = React.useState(false);
 
@@ -57,21 +56,7 @@ const ProfileScreen = () => {
         <Appbar.Action icon="pencil" onPress={openEdit} />
       </Appbar.Header>
 
-      <ToggleButton.Row onValueChange={setTab} value={tab} style={styles.segment}>
-        <ToggleButton icon="account" value="personal" accessibilityLabel="Personal Info" />
-        <ToggleButton icon="tune" value="preferences" accessibilityLabel="Preferences" />
-      </ToggleButton.Row>
-
-      {tab === 'personal' ? (
-        <ProfileCard name={name} subtitle={subtitle} avatarUri={avatarUri} bio={bio} />
-      ) : (
-        <View style={styles.prefContainer}>
-          <Text variant="titleMedium">Preferences</Text>
-          <Text style={{ marginTop: 8, color: '#444' }}>
-            No category preferences configured. You can set notification or theme preferences here later.
-          </Text>
-        </View>
-      )}
+      <ProfileCard name={name} subtitle={subtitle} avatarUri={avatarUri} bio={bio} />
 
       <Portal>
         <Modal visible={isEditVisible} onDismiss={closeEdit} contentContainerStyle={styles.modalContainer}>

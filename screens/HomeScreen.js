@@ -6,7 +6,7 @@ import axios from 'axios';
 import NewsCard from '../components/NewsCard';
 import Config from 'react-native-config';
 
-const API_KEY = Config.API_KEY;
+// const API_KEY = Config.API_KEY;
 
 const CATEGORIES = ['technology', 'sports', 'business', 'health', 'science', 'entertainment', 'world'];
 

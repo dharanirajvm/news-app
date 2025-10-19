@@ -17,3 +17,4 @@ ios/
 *.jks
 *.p12
 .env
+__pycache__/
