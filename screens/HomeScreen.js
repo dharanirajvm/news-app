@@ -29,7 +29,7 @@ const HomeScreen = () => {
     try {
       const response = await axios.get(API_URL);
       console.log(`📰 Fetching category: ${category}`);
-      // console.log('📰 News API Raw Response:', JSON.stringify(response.data.results, null, 2));
+      console.log('📰 News API Raw Response:', JSON.stringify(response.data.results, null, 2));
 
       if (response.data && response.data.results) {
         const uniqueNews = response.data.results.filter(
@@ -116,6 +116,8 @@ const HomeScreen = () => {
             title={item.title}
             description={item.description || 'No description available.'}
             link={item.link}
+            articleId={item.article_id ?? item._id ?? item.url}
+            category={selectedCategory}
           />
         )}
         contentContainerStyle={styles.listContainer}

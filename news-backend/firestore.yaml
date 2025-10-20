@@ -1,0 +1,12 @@
+users/
+  └── {user_id}/
+       ├── actions/
+       │     └── {article_id}:
+       │           liked: true/false
+       │           disliked: true/false
+       │           bookmarked: true/false
+       │           read: true/false
+       └── stats:
+              likes_count: n
+              bookmarks_count: n
+              read_count: n
