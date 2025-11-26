@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, ScrollView, Image, TouchableOpacity, Switch, Dimensions, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Modal } from 'react-native-paper';
+import { Modal, Avatar } from 'react-native-paper';
 import {
   ChevronRight,
   Calendar,
@@ -502,10 +502,14 @@ const SettingsScreen = () => {
         {/* Profile Info */}
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity onPress={onPressAvatar}>
-            <Image 
-              source={avatarUri ? { uri: avatarUri } : require('../assets/profile_pic.jpg')} 
-              style={{ width: 64, height: 64, borderRadius: 32 }}
-            />
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={{ width: 64, height: 64, borderRadius: 32 }} />
+            ) : (
+              // initials avatar placeholder
+              <View style={{ width: 64, height: 64, borderRadius: 32, overflow: 'hidden' }}>
+                <Avatar.Text size={64} label={(profileName || '').split(/\s+/).map(n => n[0]).slice(0,2).join('').toUpperCase()} />
+              </View>
+            )}
           </TouchableOpacity>
           <View style={{ marginLeft: 12 }}>
             <Text style={styles.profileName}>{profileName || 'User'}</Text>
