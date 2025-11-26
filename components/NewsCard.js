@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { StyleSheet, TouchableOpacity, View, Animated } from 'react-native';
 import { Card, Title, Paragraph, IconButton, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
@@ -15,6 +15,18 @@ const NewsCard = ({ image, title, description, link, articleId,category }) => {
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+
+  // Animated values for button feedback
+  const likeScale = useRef(new Animated.Value(1)).current;
+  const dislikeScale = useRef(new Animated.Value(1)).current;
+  const bookmarkScale = useRef(new Animated.Value(1)).current;
+
+  const pulse = (anim) => {
+    Animated.sequence([
+      Animated.spring(anim, { toValue: 1.4, useNativeDriver: true, friction: 6 }),
+      Animated.spring(anim, { toValue: 1, useNativeDriver: true, friction: 6 }),
+    ]).start();
+  };
 
   const user = auth.currentUser;
   const userId = user ? user.uid : null;
@@ -54,6 +66,7 @@ const NewsCard = ({ image, title, description, link, articleId,category }) => {
     setLiked(newLike);
     if (disliked) setDisliked(false);
     sendAction({ liked: newLike, disliked: false });
+    pulse(likeScale);
   };
 
   const toggleDislike = () => {
@@ -61,12 +74,14 @@ const NewsCard = ({ image, title, description, link, articleId,category }) => {
     setDisliked(newDislike);
     if (liked) setLiked(false);
     sendAction({ disliked: newDislike, liked: false });
+    pulse(dislikeScale);
   };
 
   const toggleBookmark = () => {
     const newBookmark = !bookmarked;
     setBookmarked(newBookmark);
     sendAction({ bookmarked: newBookmark });
+    pulse(bookmarkScale);
   };
 
   return (
@@ -80,24 +95,32 @@ const NewsCard = ({ image, title, description, link, articleId,category }) => {
           </Paragraph>
 
           <View style={styles.actions}>
-            <IconButton
-              icon={liked ? 'thumb-up' : 'thumb-up-outline'}
-              iconColor={liked ? '#4CAF50' : '#777'}
-              size={22}
-              onPress={toggleLike}
-            />
-            <IconButton
-              icon={disliked ? 'thumb-down' : 'thumb-down-outline'}
-              iconColor={disliked ? '#E53935' : '#777'}
-              size={22}
-              onPress={toggleDislike}
-            />
-            <IconButton
-              icon={bookmarked ? 'bookmark' : 'bookmark-outline'}
-              iconColor={bookmarked ? '#FFD54F' : '#777'}
-              size={22}
-              onPress={toggleBookmark}
-            />
+            <Animated.View style={{ transform: [{ scale: likeScale }] }}>
+              <IconButton
+                icon={liked ? 'thumb-up' : 'thumb-up-outline'}
+                iconColor={liked ? '#4CAF50' : '#777'}
+                size={22}
+                onPress={toggleLike}
+              />
+            </Animated.View>
+
+            <Animated.View style={{ transform: [{ scale: dislikeScale }] }}>
+              <IconButton
+                icon={disliked ? 'thumb-down' : 'thumb-down-outline'}
+                iconColor={disliked ? '#E53935' : '#777'}
+                size={22}
+                onPress={toggleDislike}
+              />
+            </Animated.View>
+
+            <Animated.View style={{ transform: [{ scale: bookmarkScale }] }}>
+              <IconButton
+                icon={bookmarked ? 'bookmark' : 'bookmark-outline'}
+                iconColor={bookmarked ? '#FFD54F' : '#777'}
+                size={22}
+                onPress={toggleBookmark}
+              />
+            </Animated.View>
           </View>
         </Card.Content>
       </Card>
